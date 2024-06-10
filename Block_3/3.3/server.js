@@ -72,11 +72,11 @@ app.get('/xml', (request, response) => {
 });
 
 app.get('/me', (request, response) => {
-    fs.readFile('./me.json', 'utf8', (err, data) => {
+    fs.readFile('./me.json', 'utf8', (err, content) => {
         if (err) {
             response.status(500).send('Internal Server Error');
         } else {
-            const me = JSON.parse(data);
+            const me = JSON.parse(content);
             response.status(200).json(me);
         }
     });
