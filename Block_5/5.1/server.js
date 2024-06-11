@@ -5,70 +5,70 @@ app.use(express.json());
 
 let books = [
   {
-    isbn: "978-3-16-148410-0",
+    isbn: "1",
     title: "Der Prozess",
     year: 1925,
     author: "Franz Kafka",
   },
   {
-    isbn: "978-0-14-044913-6",
+    isbn: "2",
     title: "Die Odyssee",
     year: -800,
     author: "Homer",
   },
   {
-    isbn: "978-0-7432-7356-5",
+    isbn: "3",
     title: "Der große Gatsby",
     year: 1925,
     author: "F. Scott Fitzgerald",
   },
 ];
 
-app.get("/books", (req, res) => {
-  res.json(books);
+app.get("/books", (request, response) => {
+  response.json(books);
 });
 
-app.get("/books/:isbn", (req, res) => {
-  const book = books.find((b) => b.isbn === req.params.isbn);
-  if (!book) return res.status(404).json({ error: "Not found" });
-  res.json(book);
+app.get("/books/:isbn", (request, response) => {
+  const book = books.find((b) => b.isbn === request.params.isbn);
+  if (!book) return response.status(404).json({ error: "Not found" });
+  response.json(book);
 });
 
-app.post("/books", (req, res) => {
-  const { isbn, title, year, author } = req.body;
+app.post("/books", (request, response) => {
+  const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
-    return res.status(422).json({ error: "Unprocessable entity" });
+    return response.status(422).json({ error: "Unprocessable" });
   const newBook = { isbn, title, year, author };
   books.push(newBook);
-  res.json(newBook);
+  response.json(newBook);
 });
 
-app.put("/books/:isbn", (req, res) => {
-  const { isbn, title, year, author } = req.body;
+app.put("/books/:isbn", (request, response) => {
+  const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
-    return res.status(422).json({ error: "Unprocessable entity" });
-  let book = books.find((b) => b.isbn === req.params.isbn);
-  if (!book) return res.status(404).json({ error: "Not found" });
+    return response.status(422).json({ error: "Unprocessable" });
+  let book = books.find((b) => b.isbn === request.params.isbn);
+  if (!book) return response.status(404).json({ error: "Not found" });
   book = { isbn, title, year, author };
-  res.json(book);
+  response.json(book);
 });
 
-app.delete("/books/:isbn", (req, res) => {
-  const bookIndex = books.findIndex((b) => b.isbn === req.params.isbn);
-  if (bookIndex === -1) return res.status(404).json({ error: "Not found" });
+app.delete("/books/:isbn", (request, response) => {
+  const bookIndex = books.findIndex((b) => b.isbn === request.params.isbn);
+  if (bookIndex === -1) return response.status(404).json({ error: "Not found" });
   books.splice(bookIndex, 1);
-  res.status(204).send();
+  response.status(204).send();
 });
 
-app.patch("/books/:isbn", (req, res) => {
-  const book = books.find((b) => b.isbn === req.params.isbn);
-  if (!book) return res.status(404).json({ error: "Not found" });
-  const { isbn, title, year, author } = req.body;
+app.patch("/books/:isbn", (request, response) => {
+  const book = books.find((b) => b.isbn === request.params.isbn);
+  if (!book) return response.status(404).json({ error: "Not found" });
+  const { isbn, title, year, author } = request.body;
   if (isbn) book.isbn = isbn;
   if (title) book.title = title;
   if (year) book.year = year;
   if (author) book.author = author;
-  res.json(book);
+  response.json(book);
 });
 
 app.listen(port, () => {
