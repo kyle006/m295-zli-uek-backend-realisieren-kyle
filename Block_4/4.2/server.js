@@ -4,7 +4,13 @@ const { request } = require('http');
 const app = express();
 const port = 3000;
 
-let me = {};
+let me = {
+    name:"Kyle",
+    age: 18,
+    profession: "Apprentice",
+    hobbies: ["Violin", "Gaming", "Going Outside"],
+    location: "Zürich"
+    };
 
 app.get("/now", (request, response) => {
     const timezone = request.query.tz;
@@ -44,8 +50,21 @@ app.get("/secret2", (request, response) => {
     }
 });
 
-app.get("/chuck", (request, response) => {
-    
+app.get("/chuck", async (request, response) => {
+    const name = request.query.name || "Micheal";
+
+    const randomJokeResponse = await fetch("https://api.chucknorris.io/jokes/random");
+    const randomJoke = await randomJokeResponse.json();
+
+    let finalJoke = randomJoke.value.replace("Chuck Norris", name);
+
+    response.status(200).send(finalJoke);
+});
+
+app.patch('/me', (request, response) => {
+    const updates = request.body;
+    me = { ...me, ...updates };
+    response.send(me);
 });
 
 app.listen(port, () => {
