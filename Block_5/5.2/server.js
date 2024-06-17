@@ -130,7 +130,8 @@ app.post("/lends", (request, response) => {
     return response.status(400).json({ error: "Book already lent" });
 
   const lend = {
-    id: Date.now().toString(),
+    id: Math.random().toString(36).substr(2, 9),
+    id: lends.length + 1,
     customer_id,
     isbn,
     borrowed_at: new Date(),
