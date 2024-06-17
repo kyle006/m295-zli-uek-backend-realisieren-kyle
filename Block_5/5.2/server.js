@@ -50,17 +50,17 @@ let lends = [{
     "borrowed_at": "2024-05-14T09:26:11.877Z"
   }
 ];
-
+//---------------------
 app.get("/books", (request, response) => {
   response.json(books);
 });
-
+//---------------------
 app.get("/books/:isbn", (request, response) => {
-  const book = books.find((b) => b.isbn === request.params.isbn);
+  const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   response.json(book);
 });
-
+//---------------------
 app.post("/books", (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
@@ -69,26 +69,26 @@ app.post("/books", (request, response) => {
   books.push(newBook);
   response.json(newBook);
 });
-
+//---------------------
 app.put("/books/:isbn", (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
     return response.status(422).json({ error: "Unprocessable" });
-  let book = books.find((b) => b.isbn === request.params.isbn);
+  let book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   book = { isbn, title, year, author };
   response.json(book);
 });
-
+//---------------------
 app.delete("/books/:isbn", (request, response) => {
-  const bookIndex = books.findIndex((b) => b.isbn === request.params.isbn);
+  const bookIndex = books.findIndex((book) => book.isbn === request.params.isbn);
   if (bookIndex === -1) return response.status(404).json({ error: "Not found" });
   books.splice(bookIndex, 1);
   response.status(204).send();
 });
 
 app.patch("/books/:isbn", (request, response) => {
-  const book = books.find((b) => b.isbn === request.params.isbn);
+  const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   const { isbn, title, year, author } = request.body;
   if (isbn) book.isbn = isbn;
@@ -103,7 +103,7 @@ app.get("/lends", (request, response) => {
   });
   
   app.get("/lends/:id", (request, response) => {
-      const lend = lends.find((l) => l.id === Number(request.params.id));
+      const lend = lends.find((lends) => lends.id === Number(request.params.id));
       if (!lend) return response.status(404).json({ error: "Not found" });
       response.json(lend);
   });
@@ -112,10 +112,10 @@ app.get("/lends", (request, response) => {
     const { customer_id, isbn } = request.body;
     if (!customer_id || !isbn) return response.status(422).json({ error: "Unprocessable" });
   
-    const openLends = lends.filter(l => l.customer_id === customer_id && !l.returned_at);
+    const openLends = lends.filter(lends => lends.customer_id === customer_id && !l.returned_at);
     if (openLends.length >= 5) return response.status(400).json({ error: "Maximum lends reached" });
   
-    const bookAlreadyLent = lends.some(l => l.isbn === isbn && !l.returned_at);
+    const bookAlreadyLent = lends.some(lends => lends.isbn === isbn && !l.returned_at);
     if (bookAlreadyLent) return response.status(400).json({ error: "Book already lent" });
   
     const lend = {
@@ -131,7 +131,7 @@ app.get("/lends", (request, response) => {
   
   app.delete("/lends/:id", (request, response) => {
     const id = request.params.id;
-    const lendIndex = lends.findIndex((lend) => lend.id == id);
+    const lendIndex = lends.findIndex((lends) => lends.id == id);
 
     if (lendIndex === -1) {
       return response.status(404).json({ error: "Not found" });
