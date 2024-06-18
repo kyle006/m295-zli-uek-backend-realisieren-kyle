@@ -42,7 +42,7 @@ let books = [
   },
   {
     isbn: "3",
-    title: "Der große Gatsby",
+    title: "Der grosse Gatsby",
     year: 1925,
     author: "F. Scott Fitzgerald",
   },
@@ -352,32 +352,30 @@ app.get("/lends/:id", (request, response) => {
  */
 //---
 app.post("/lends", (request, response) => {
-  const { customer_id, isbn } = request.body;
-  if (!customer_id || !isbn)
-    return response.status(422).json({ error: "Unprocessable" });
+    
+  if(!request.body || !request.body.customer_id || !request.body.isbn || request.body.isbn){
+      console.log("");
+      console.log("ERROR 422: Faulty data.");
+      response.status(422).send("ERROR 422: Faulty data.");
+      return;
+  }
 
-  const openLends = lends.filter(
-    (lends) => lends.customer_id === customer_id && !l.returned_at
-  );
-  if (openLends.length >= 5)
-    return response.status(400).json({ error: "Maximum lends reached" });
+  const lendsList = JSON.parse(fs.readFileSync("lends.json", "utf-8"));
+  let newLend = request.body;
+  newLend.id = request.body.id ?? uuidv4();
+  newLend.borrowed_at = request.body.borrowed_at ?? new Date().toLocaleString("de-CH");
 
-  const bookAlreadyLent = lends.some(
-    (lends) => lends.isbn === isbn && !l.returned_at
-  );
-  if (bookAlreadyLent)
-    return response.status(400).json({ error: "Book already lent" });
+  if(lendsList.find(lend => lend.id == newLend.id)){
+      console.log("");
+      console.log("ERROR 422: Resource with id " + newLend.id + " already exists.");
+      response.status(422).send("ERROR 422: Resource with id " + newLend.id + " already exists.");
+      return;
+  }
 
-  const lend = {
-    id: Math.random().toString(36).substr(2, 9),
-    id: lends.length + 1,
-    customer_id,
-    isbn,
-    borrowed_at: new Date(),
-    returned_at: null,
-  };
-  lends.push(lend);
-  response.json(lend);
+  lendsList.push(newLend);
+  
+  fs.writeFileSync("lends.json", JSON.stringify(lendsList));
+  response.status(200).send(newLend);
 });
 
 /**
