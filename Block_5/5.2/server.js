@@ -76,6 +76,13 @@ let lends = [
     borrowed_at: "2024-05-14T09:26:11.877Z",
   },
 ];
+function isAuthenticated(request, response, next) {
+  if (request.session.email) {
+    next();
+  } else {
+    response.status(401).json({ error: 'Not logged in' });
+  }
+}
 
 /**
  * @openapi
@@ -91,7 +98,7 @@ let lends = [
  *         description: Not found
  */
 //---------------------------------------------------------------------
-app.get("/books", (request, response) => {
+app.get("/books", isAuthenticated, (request, response) => {
   response.json(books);
 });
 
@@ -115,7 +122,7 @@ app.get("/books", (request, response) => {
  *         description: Not found
  */
 //---------------------------------------------------------------------
-app.get("/books/:isbn", (request, response) => {
+app.get("/books/:isbn", isAuthenticated, (request, response) => {
   const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   response.json(book);
@@ -150,7 +157,7 @@ app.get("/books/:isbn", (request, response) => {
  *         description: Unprocessable
  */
 //---------------------------------------------------------------------
-app.post("/books", (request, response) => {
+app.post("/books", isAuthenticated, (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
     return response.status(422).json({ error: "Unprocessable" });
@@ -195,7 +202,7 @@ app.post("/books", (request, response) => {
  *       422:
  *         description: Unprocessable
  */
-app.put("/books/:isbn", (request, response) => {
+app.put("/books/:isbn", isAuthenticated, (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
     return response.status(422).json({ error: "Unprocessable" });
@@ -225,7 +232,7 @@ app.put("/books/:isbn", (request, response) => {
  *         description: Not found
  */
 //---------------------------------------------------------------------
-app.delete("/books/:isbn", (request, response) => {
+app.delete("/books/:isbn", isAuthenticated, (request, response) => {
   const bookIndex = books.findIndex(
     (book) => book.isbn === request.params.isbn
   );
@@ -270,7 +277,7 @@ app.delete("/books/:isbn", (request, response) => {
  *         description: Not found
  */
 //---------------------------------------------------------------------
-app.patch("/books/:isbn", (request, response) => {
+app.patch("/books/:isbn", isAuthenticated, (request, response) => {
   const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   const { isbn, title, year, author } = request.body;
@@ -293,7 +300,7 @@ app.patch("/books/:isbn", (request, response) => {
 *         description: A JSON array of all lends
 */
 //---
-app.get("/lends", (request, response) => {
+app.get("/lends", isAuthenticated, (request, response) => {
   response.json(lends);
 });
 
@@ -317,7 +324,7 @@ app.get("/lends", (request, response) => {
  *         description: Not found
  */
 //---
-app.get("/lends/:id", (request, response) => {
+app.get("/lends/:id", isAuthenticated, (request, response) => {
   const lend = lends.find((lends) => lends.id === Number(request.params.id));
   if (!lend) return response.status(404).json({ error: "Not found" });
   response.json(lend);
@@ -352,7 +359,7 @@ app.get("/lends/:id", (request, response) => {
  *         description: Unprocessable entity.
  */
 //---
-app.post("/lends", (request, response) => {
+app.post("/lends", isAuthenticated, (request, response) => {
     
   if(!request.body || !request.body.customer_id || !request.body.isbn || request.body.isbn){
       console.log("");
@@ -399,7 +406,7 @@ app.post("/lends", (request, response) => {
  *         description: The lend with the specified ID was not found.
  */
 //---
-app.delete("/lends/:id", (request, response) => {
+app.delete("/lends/:id", isAuthenticated, (request, response) => {
   const id = request.params.id;
   const lendIndex = lends.findIndex((lends) => lends.id == id);
 
@@ -421,67 +428,61 @@ app.use(session({
 }));
 
 const password = 'zli';
-//styling by AI
-/**
- * @openapi
- * /login:
- *   post:
- *     tags:
- *       - login
- *     summary: Logs in a user
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: The user is logged in
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 email:
- *                   type: string
- *       403:
- *         description: Forbidden
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *     required:
- *       - email
- *       - password
- *       - error
- */
+//---------------------------------------------------------------------
 app.post('/login', (request, response) => {
   const logindata = request.body;
 
   if (password === logindata.password) {
     request.session.email = logindata.email;
+    response.cookie('user', logindata.email, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
     return response.status(200).json({ email: request.session.email });
   }
-  return response.status(403).json({ error: 'Forbiden' });
+  return response.status(403).json({ error: 'Forbidden' });
 });
 
-app.get('/verify', (request, response) => {
+/**
+ * @openapi
+ * /verify:
+ *   get:
+ *     tags:
+ *       - Authentication
+ *     summary: Verifies the session
+ *     responses:
+ *       200:
+ *         description: Session is verified
+ *       401:
+ *         description: Session is expired
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server Error
+ *     required:
+ *       - email  
+ *       - password
+ *       - error
+ */
+//---------------------------------------------------------------------
+app.get('/verify', isAuthenticated,(request, response) => {
   if (request.session.email) {
     return response.status(200).json({ message: 'Session is verified' });
   }
   return response.status(401).json({ error: 'Session is expired' });
 });
-
-app.delete('/logout', (request, response) => {
+/**
+ * @openapi
+ * /logout:
+ *   delete:
+ *     tags:
+ *       - Authentication
+ *     summary: Logs out a user
+ *     responses:
+ *       204:
+ *         description: The user is logged out
+ *       401:
+ *         description: Not logged in
+ */
+//---------------------------------------------------------------------
+app.delete('/logout', isAuthenticated, (request, response) => {
   if (request.session.email) {
     request.session.destroy();
     return response.status(204).send();
