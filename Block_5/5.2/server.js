@@ -421,7 +421,49 @@ app.use(session({
 }));
 
 const password = 'zli';
-
+//styling by AI
+/**
+ * @openapi
+ * /login:
+ *   post:
+ *     tags:
+ *       - login
+ *     summary: Logs in a user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The user is logged in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 email:
+ *                   type: string
+ *       403:
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *     required:
+ *       - email
+ *       - password
+ *       - error
+ */
 app.post('/login', (request, response) => {
   const logindata = request.body;
 
