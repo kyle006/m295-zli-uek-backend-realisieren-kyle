@@ -1,0 +1,69 @@
+{
+	"info": {
+		"_postman_id": "d6dbb8bc-d9ff-42e4-8019-e225895eb213",
+		"name": "Auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22830504"
+	},
+	"item": [
+		{
+			"name": "http://localhost:3000/private?zli=zli1234",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "zli1234",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "zli",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/private?zli=zli1234",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"private"
+					],
+					"query": [
+						{
+							"key": "zli",
+							"value": "zli1234"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Public",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/public",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"public"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

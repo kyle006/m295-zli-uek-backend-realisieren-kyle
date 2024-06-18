@@ -1,4 +1,5 @@
 const express = require("express");
+const session = require("express-session");
 const port = 3000;
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -408,6 +409,43 @@ app.delete("/lends/:id", (request, response) => {
 
   lends.splice(lendIndex, 1);
   response.status(204).send();
+});
+//Authentication
+
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'supersecret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {},
+}));
+
+const password = 'zli';
+
+app.post('/login', (request, response) => {
+  const logindata = request.body;
+
+  if (password === logindata.password) {
+    request.session.email = logindata.email;
+    return response.status(200).json({ email: request.session.email });
+  }
+  return response.status(403).json({ error: 'Forbidden' });
+});
+
+app.get('/verify', (request, response) => {
+  if (request.session.email) {
+    return response.status(200).json({ message: 'Session is verified' });
+  }
+  return response.status(401).json({ error: 'Session is expired' });
+});
+
+app.delete('/logout', (request, response) => {
+  if (request.session.email) {
+    request.session.destroy();
+    return response.status(204).send();
+  }
+
+  return response.status(401).json({ error: 'Not logged in' });
 });
 
 app.listen(port, () => {
