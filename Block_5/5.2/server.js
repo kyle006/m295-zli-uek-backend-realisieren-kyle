@@ -429,7 +429,7 @@ app.post('/login', (request, response) => {
     request.session.email = logindata.email;
     return response.status(200).json({ email: request.session.email });
   }
-  return response.status(403).json({ error: 'Forbidden' });
+  return response.status(403).json({ error: 'Forbiden' });
 });
 
 app.get('/verify', (request, response) => {
