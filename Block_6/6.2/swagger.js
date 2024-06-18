@@ -1,7 +1,8 @@
+//second way
 const swaggerAutogen = require('swagger-autogen')()
 
-const outputFile = './swagger_output.json'
-const endpointsFiles = ['./server.js', './server.js']
+const outputFile = './swagger.json'
+const endpointsFiles = ['./server.js']
 
 const doc = {
     info: {
@@ -10,39 +11,18 @@ const doc = {
     },
     host: 'localhost:3000',
     definitions: {
+        Book: {
+            isbn: "string",
+            title: "string",
+            year: "number",
+            author: "string"
+        },
         Lend: {
-            id: 1,
-            customer_id: "1234567890",
-            isbn: "1",
-            borrowed_at: "2024-05-14T09:06:05.439Z"
-        },
-        Return: {
-            id: 2,
-            customer_id: "0987654321",
-            isbn: "2",
-            returned_at: "2024-06-14T09:06:05.439Z"
-        }
-    },
-    paths: {
-        "/lends": {
-            "get": {
-                tags: ["Lend"],
-                // Rest of the endpoint definition
-            },
-            "post": {
-                tags: ["Lend"],
-                // Rest of the endpoint definition
-            }
-        },
-        "/returns": {
-            "get": {
-                tags: ["Return"],
-                // Rest of the endpoint definition
-            },
-            "post": {
-                tags: ["Return"],
-                // Rest of the endpoint definition
-            }
+            id: "number",
+            customer_id: "string",
+            isbn: "string",
+            borrowed_at: "string",
+            returned_at: "string"
         }
     }
 }

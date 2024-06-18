@@ -1,10 +1,31 @@
 const express = require("express");
-const app = express();
 const port = 3000;
+const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger_output.json');
+ 
+const options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Library API',
+            version: '1.0.0',
+            description: 'A simple Express Library API',
+        },
+        servers: [
+            {
+                url: 'http://localhost:3000',
+            },
+        ],
+    },
+    apis: ['./server.js'],
+};
+ 
+const swaggerSpec = swaggerJsdoc(options);
+ 
+const app = express();
+ 
 app.use(express.json());
-app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 let books = [
   {
@@ -54,17 +75,80 @@ let lends = [
     borrowed_at: "2024-05-14T09:26:11.877Z",
   },
 ];
-//---------------------
+
+/**
+ * @openapi
+ * /books:
+ *   get:
+ *     tags:
+ *       - books
+ *     summary: Returns a list of all books
+ *     responses:
+ *       200:
+ *         description: A JSON array of all books
+ *       404:
+ *         description: Not found
+ */
+//---------------------------------------------------------------------
 app.get("/books", (request, response) => {
   response.json(books);
 });
-//---------------------
+
+/**
+ * @openapi
+ * /books/{isbn}:
+ *   get:
+ *     tags:
+ *       - books
+ *     summary: Returns a book with a specific ISBN
+ *     parameters:
+ *       - in: path
+ *         name: isbn
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A book object
+ *       404:
+ *         description: Not found
+ */
+//---------------------------------------------------------------------
 app.get("/books/:isbn", (request, response) => {
   const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
   response.json(book);
 });
-//---------------------
+
+/**
+ * @openapi
+ * /books:
+ *   post:
+ *     tags:
+ *       - books
+ *     summary: Adds a new book
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isbn:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *               author:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The created book object
+ *       422:
+ *         description: Unprocessable
+ */
+//---------------------------------------------------------------------
 app.post("/books", (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
@@ -73,7 +157,43 @@ app.post("/books", (request, response) => {
   books.push(newBook);
   response.json(newBook);
 });
-//---------------------
+
+/**
+ * @openapi
+ * /books/{isbn}:
+ *   put:
+ *     tags:
+ *       - books
+ *     summary: Updates a book with a specific ISBN
+ *     parameters:
+ *       - in: path
+ *         name: isbn
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isbn:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *               author:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated book object
+ *       404:
+ *         description: Not found
+ *       422:
+ *         description: Unprocessable
+ */
 app.put("/books/:isbn", (request, response) => {
   const { isbn, title, year, author } = request.body;
   if (!isbn || !title || !year || !author)
@@ -83,7 +203,27 @@ app.put("/books/:isbn", (request, response) => {
   book = { isbn, title, year, author };
   response.json(book);
 });
-//---------------------
+
+/**
+ * @openapi
+ * /books/{isbn}:
+ *   delete:
+ *     tags:
+ *       - books
+ *     summary: Deletes a book with a specific ISBN
+ *     parameters:
+ *       - in: path
+ *         name: isbn
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: No content
+ *       404:
+ *         description: Not found
+ */
+//---------------------------------------------------------------------
 app.delete("/books/:isbn", (request, response) => {
   const bookIndex = books.findIndex(
     (book) => book.isbn === request.params.isbn
@@ -93,7 +233,42 @@ app.delete("/books/:isbn", (request, response) => {
   books.splice(bookIndex, 1);
   response.status(204).send();
 });
-//----
+
+/**
+ * @openapi
+ * /books/{isbn}:
+ *   patch:
+ *     tags:
+ *       - books
+ *     summary: Partially updates a book with a specific ISBN
+ *     parameters:
+ *       - in: path
+ *         name: isbn
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isbn:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *               author:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The updated book object
+ *       404:
+ *         description: Not found
+ */
+//---------------------------------------------------------------------
 app.patch("/books/:isbn", (request, response) => {
   const book = books.find((book) => book.isbn === request.params.isbn);
   if (!book) return response.status(404).json({ error: "Not found" });
@@ -104,16 +279,77 @@ app.patch("/books/:isbn", (request, response) => {
   if (author) book.author = author;
   response.json(book);
 });
+
+/**
+* @openapi
+* /lends:
+*   get:
+*     tags:
+*       - lends
+*     summary: Returns a list of all lends
+*     responses:
+*       200:
+*         description: A JSON array of all lends
+*/
 //---
 app.get("/lends", (request, response) => {
   response.json(lends);
 });
+
+/**
+ * @openapi
+ * /lends/{id}:
+ *   get:
+ *     tags:
+ *       - lends
+ *     summary: Returns a lend with a specific ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: A lend object
+ *       404:
+ *         description: Not found
+ */
 //---
 app.get("/lends/:id", (request, response) => {
   const lend = lends.find((lends) => lends.id === Number(request.params.id));
   if (!lend) return response.status(404).json({ error: "Not found" });
   response.json(lend);
 });
+
+/**
+ * @openapi
+ * /lends:
+ *   post:
+ *     tags:
+ *       - lends
+ *     summary: Create a new lend
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               customer_id:
+ *                 type: string
+ *                 description: The ID of the customer borrowing the book.
+ *               isbn:
+ *                 type: string
+ *                 description: The ISBN of the book being borrowed.
+ *     responses:
+ *       200:
+ *         description: The created lend object.
+ *       400:
+ *         description: Bad request.
+ *       422:
+ *         description: Unprocessable entity.
+ */
 //---
 app.post("/lends", (request, response) => {
   const { customer_id, isbn } = request.body;
@@ -143,6 +379,26 @@ app.post("/lends", (request, response) => {
   lends.push(lend);
   response.json(lend);
 });
+
+/**
+ * @openapi
+ * /lends/{id}:
+ *   delete:
+ *     tags:
+ *       - lends
+ *     summary: Delete a lend by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: The lend was successfully deleted.
+ *       404:
+ *         description: The lend with the specified ID was not found.
+ */
 //---
 app.delete("/lends/:id", (request, response) => {
   const id = request.params.id;
@@ -157,5 +413,5 @@ app.delete("/lends/:id", (request, response) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+    console.log(`Server running at http://localhost:${port}`);
+  });
