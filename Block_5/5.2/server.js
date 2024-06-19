@@ -27,6 +27,78 @@ const app = express();
  
 app.use(express.json());
 app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'supersecret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {},
+}));
+
+const password = 'zli';
+//---------------------------------------------------------------------
+app.post('/login', (request, response) => {
+  const logindata = request.body;
+
+  if (password === logindata.password) {
+    request.session.email = logindata.email;
+    response.cookie('user', logindata.email, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
+    return response.status(200).json({ email: request.session.email });
+  }
+  return response.status(403).json({ error: 'Forbidden' });
+});
+
+/**
+ * @openapi
+ * /verify:
+ *   get:
+ *     tags:
+ *       - Authentication
+ *     summary: Verifies the session
+ *     responses:
+ *       200:
+ *         description: Session is verified
+ *       401:
+ *         description: Session is expired
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Internal Server Error
+ *     required:
+ *       - email  
+ *       - password
+ *       - error
+ */
+//---------------------------------------------------------------------
+app.get('/verify', isAuthenticated,(request, response) => {
+  if (request.session.email) {
+    return response.status(200).json({ message: 'Session is verified' });
+  }
+  return response.status(401).json({ error: 'Session is expired' });
+});
+/**
+ * @openapi
+ * /logout:
+ *   delete:
+ *     tags:
+ *       - Authentication
+ *     summary: Logs out a user
+ *     responses:
+ *       204:
+ *         description: The user is logged out
+ *       401:
+ *         description: Not logged in
+ */
+//---------------------------------------------------------------------
+app.delete('/logout', isAuthenticated, (request, response) => {
+  if (request.session.email) {
+    request.session.destroy();
+    return response.status(204).send();
+  }
+
+  return response.status(401).json({ error: 'Not logged in' });
+});
+
 
 let books = [
   {
@@ -416,79 +488,6 @@ app.delete("/lends/:id", isAuthenticated, (request, response) => {
 
   lends.splice(lendIndex, 1);
   response.status(204).send();
-});
-//Authentication
-
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: 'supersecret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {},
-}));
-
-const password = 'zli';
-//---------------------------------------------------------------------
-app.post('/login', (request, response) => {
-  const logindata = request.body;
-
-  if (password === logindata.password) {
-    request.session.email = logindata.email;
-    response.cookie('user', logindata.email, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
-    return response.status(200).json({ email: request.session.email });
-  }
-  return response.status(403).json({ error: 'Forbidden' });
-});
-
-/**
- * @openapi
- * /verify:
- *   get:
- *     tags:
- *       - Authentication
- *     summary: Verifies the session
- *     responses:
- *       200:
- *         description: Session is verified
- *       401:
- *         description: Session is expired
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal Server Error
- *     required:
- *       - email  
- *       - password
- *       - error
- */
-//---------------------------------------------------------------------
-app.get('/verify', isAuthenticated,(request, response) => {
-  if (request.session.email) {
-    return response.status(200).json({ message: 'Session is verified' });
-  }
-  return response.status(401).json({ error: 'Session is expired' });
-});
-/**
- * @openapi
- * /logout:
- *   delete:
- *     tags:
- *       - Authentication
- *     summary: Logs out a user
- *     responses:
- *       204:
- *         description: The user is logged out
- *       401:
- *         description: Not logged in
- */
-//---------------------------------------------------------------------
-app.delete('/logout', isAuthenticated, (request, response) => {
-  if (request.session.email) {
-    request.session.destroy();
-    return response.status(204).send();
-  }
-
-  return response.status(401).json({ error: 'Not logged in' });
 });
 
 app.listen(port, () => {
